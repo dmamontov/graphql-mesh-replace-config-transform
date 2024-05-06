@@ -1,10 +1,10 @@
 export interface ReplaceConfigTransformConfig {
     typeName: string;
     fieldName: string;
-    description?: string;
-    deprecated?: boolean;
+    description?: string | boolean;
+    deprecated?: string | boolean;
     nullable?: boolean;
-    defaultValue?: unknown;
+    defaultValue?: string;
     extensions?: Record<string, any>;
     directives?: ReplaceConfigDirectiveConfig[];
 }

@@ -11,11 +11,11 @@ import pluginPrettier from "eslint-plugin-prettier/recommended";
 export default [
     {
         rules: eslint.configs.recommended.rules,
-        ignores: ["node_modules/**/*", ".bob/**/*", "dist/**/*"],
+        ignores: ["node_modules/**/*", ".bob/**/*", "dist/**/*", "coverage/**/*"],
     },
     {
         files: ["**/*.ts", "**/*.tsx"],
-        ignores: ["node_modules/**/*", ".bob/**/*", "dist/**/*"],
+        ignores: ["node_modules/**/*", ".bob/**/*", "dist/**/*", "coverage/**/*"],
         languageOptions: {
             ecmaVersion: 2020,
             globals: {
@@ -24,7 +24,7 @@ export default [
                 ...globals.node,
             },
             parserOptions: {
-                project: true,
+                project: './tsconfig.eslint.json',
                 tsconfigRootDir: import.meta.dirname,
             },
             parser: parserTs,

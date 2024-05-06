@@ -8,17 +8,8 @@ import {
     type GraphQLInputFieldConfig,
     type GraphQLSchema,
 } from 'graphql';
-import {
-    applyRequestTransforms,
-    applyResultTransforms,
-    applySchemaTransforms,
-} from '@graphql-mesh/utils';
-import {
-    type DelegationContext,
-    type SubschemaConfig,
-    type Transform,
-} from '@graphql-tools/delegate';
-import { type ExecutionRequest, type ExecutionResult } from '@graphql-tools/utils';
+import { applySchemaTransforms } from '@graphql-mesh/utils';
+import { type SubschemaConfig, type Transform } from '@graphql-tools/delegate';
 import {
     TransformCompositeFields,
     TransformEnumValues,
@@ -46,7 +37,7 @@ export default class ReplaceConfigTransform implements Transform {
                     fieldName: string,
                     fieldConfig: GraphQLFieldConfig<any, any>,
                 ): GraphQLFieldConfig<any, any> =>
-                    this.apply(
+                    this.replace(
                         typeName,
                         fieldName,
                         fieldConfig,
@@ -59,7 +50,7 @@ export default class ReplaceConfigTransform implements Transform {
                     fieldName: string,
                     inputFieldConfig: GraphQLInputFieldConfig,
                 ): GraphQLInputFieldConfig =>
-                    this.apply(
+                    this.replace(
                         typeName,
                         fieldName,
                         inputFieldConfig,
@@ -72,7 +63,7 @@ export default class ReplaceConfigTransform implements Transform {
                     externalValue: string,
                     enumValueConfig: GraphQLEnumValueConfig,
                 ): GraphQLEnumValueConfig =>
-                    this.apply(
+                    this.replace(
                         typeName,
                         externalValue,
                         enumValueConfig,
@@ -95,33 +86,7 @@ export default class ReplaceConfigTransform implements Transform {
         );
     }
 
-    public transformRequest(
-        originalRequest: ExecutionRequest,
-        delegationContext: DelegationContext,
-        transformationContext: any,
-    ): ExecutionRequest {
-        return applyRequestTransforms(
-            originalRequest,
-            delegationContext,
-            transformationContext,
-            this.transformers,
-        );
-    }
-
-    transformResult(
-        originalResult: ExecutionResult,
-        delegationContext: DelegationContext,
-        transformationContext: any,
-    ) {
-        return applyResultTransforms(
-            originalResult,
-            delegationContext,
-            transformationContext,
-            this.transformers,
-        );
-    }
-
-    private apply(
+    private replace(
         typeName: string,
         fieldName: string,
         fieldConfig:
@@ -134,7 +99,7 @@ export default class ReplaceConfigTransform implements Transform {
 
         let newFieldConfig = fieldConfig;
         for (const replaceConfig of replaceConfigs) {
-            if (replaceConfig.description) {
+            if (replaceConfig.description !== undefined) {
                 newFieldConfig = this.setDescription(newFieldConfig, replaceConfig.description);
             }
 
@@ -144,7 +109,7 @@ export default class ReplaceConfigTransform implements Transform {
 
             if (replaceConfig.nullable !== undefined) {
                 if (![FieldType.Composite, FieldType.Input].includes(fieldType)) {
-                    throw new Error('Nullable can only be set for InputField and Field.');
+                    throw new TypeError('Nullable can only be set for InputField and Field.');
                 }
 
                 // @ts-expect-error
@@ -153,7 +118,7 @@ export default class ReplaceConfigTransform implements Transform {
 
             if (replaceConfig.defaultValue) {
                 if (fieldType !== FieldType.Input) {
-                    throw new Error('The default value can only be set for InputField.');
+                    throw new TypeError('The default value can only be set for InputField.');
                 }
 
                 newFieldConfig = this.setDefaultValue(
@@ -185,14 +150,25 @@ export default class ReplaceConfigTransform implements Transform {
             | GraphQLFieldConfig<any, any>
             | GraphQLInputFieldConfig
             | GraphQLEnumValueConfig,
-        description: string,
+        description: string | boolean,
     ): GraphQLFieldConfig<any, any> | GraphQLInputFieldConfig | GraphQLEnumValueConfig {
+        if (!description) {
+            return {
+                ...fieldConfig,
+                description: null,
+            };
+        }
+
+        if (typeof description == 'boolean') {
+            throw new TypeError('Description can only be false or a string.');
+        }
+
         return {
             ...fieldConfig,
             description,
             extensions: {
                 ...fieldConfig.extensions,
-                isCustomDescriptions: true,
+                description,
             },
         };
     }
@@ -202,11 +178,15 @@ export default class ReplaceConfigTransform implements Transform {
             | GraphQLFieldConfig<any, any>
             | GraphQLInputFieldConfig
             | GraphQLEnumValueConfig,
-        deprecated: boolean,
+        deprecated: boolean | string,
     ): GraphQLFieldConfig<any, any> | GraphQLInputFieldConfig | GraphQLEnumValueConfig {
         return {
             ...fieldConfig,
-            deprecationReason: deprecated ? 'deprecated' : null,
+            deprecationReason: deprecated
+                ? typeof deprecated == 'boolean'
+                    ? 'Deprecated'
+                    : deprecated
+                : null,
         };
     }
 
@@ -269,11 +249,13 @@ export default class ReplaceConfigTransform implements Transform {
         let newFieldConfig = fieldConfig;
 
         for (const directive of directives) {
+            /* istanbul ignore next */
             if (!newFieldConfig.astNode) {
                 // @ts-expect-error
                 newFieldConfig.astNode = {};
             }
 
+            /* istanbul ignore next */
             if (!newFieldConfig?.astNode?.directives) {
                 // @ts-expect-error
                 newFieldConfig.astNode.directives = [];
@@ -298,16 +280,16 @@ export default class ReplaceConfigTransform implements Transform {
     }
 
     getValueNode(value: any): ConstValueNode {
-        if (!value) {
-            return {
-                kind: Kind.NULL,
-            };
-        }
-
         if (typeof value == 'boolean') {
             return {
                 kind: Kind.BOOLEAN,
                 value: value,
+            };
+        }
+
+        if (!value || value === 'null') {
+            return {
+                kind: Kind.NULL,
             };
         }
 
