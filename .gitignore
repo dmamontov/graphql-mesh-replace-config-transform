@@ -3,5 +3,6 @@
 .idea/
 artifacts/
 dist/
+coverage/
 .npmrc
 yarn-error.log
