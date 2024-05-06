@@ -4,7 +4,7 @@ Replace Config Transform - is a transform for GraphQL Mesh that allows you to re
 
 ## Installation
 
-Before you can use the replace-config-transform, you need to install it along with GraphQL Mesh if you haven't already done so. You can install these using npm or yarn.
+Before you can use the Replace Config Transform, you need to install it along with GraphQL Mesh if you haven't already done so. You can install these using npm or yarn.
 
 ```bash
 npm install @dmamontov/graphql-mesh-replace-config-transform
