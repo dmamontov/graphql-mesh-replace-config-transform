@@ -28,7 +28,7 @@ Add the following paths configuration under the compilerOptions in your tsconfig
 {
   "compilerOptions": {
     "paths": {
-       "replace-config": ["node_modules/@dmamontov/graphql-mesh-replace-config-transform"]
+       "replace-config": ["./node_modules/@dmamontov/graphql-mesh-replace-config-transform"]
     }
   }
 }
