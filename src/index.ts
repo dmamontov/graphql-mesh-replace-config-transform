@@ -23,7 +23,7 @@ import {
 
 export default class ReplaceConfigTransform implements Transform {
     public noWrap: boolean = false;
-    private readonly configs: ReplaceConfigTransformConfig[];
+    private configs: ReplaceConfigTransformConfig[];
     private readonly transformers: Array<
         TransformCompositeFields | TransformInputObjectFields | TransformEnumValues
     >;
@@ -78,6 +78,13 @@ export default class ReplaceConfigTransform implements Transform {
         subschemaConfig: SubschemaConfig,
         transformedSchema?: GraphQLSchema,
     ) {
+        this.configs = this.configs.map((config: ReplaceConfigTransformConfig) => {
+            return {
+                ...config,
+                type: config.type ? originalWrappingSchema.getType(config.type) : undefined,
+            } as ReplaceConfigTransformConfig;
+        });
+
         return applySchemaTransforms(
             originalWrappingSchema,
             subschemaConfig,
@@ -101,6 +108,15 @@ export default class ReplaceConfigTransform implements Transform {
         for (const replaceConfig of replaceConfigs) {
             if (replaceConfig.description !== undefined) {
                 newFieldConfig = this.setDescription(newFieldConfig, replaceConfig.description);
+            }
+
+            if (replaceConfig.type) {
+                if (![FieldType.Composite, FieldType.Input].includes(fieldType)) {
+                    throw new TypeError('Change type can only be set for InputField and Field.');
+                }
+
+                // @ts-expect-error
+                newFieldConfig = this.setType(newFieldConfig, replaceConfig.type);
             }
 
             if (replaceConfig.deprecated !== undefined) {
@@ -170,6 +186,16 @@ export default class ReplaceConfigTransform implements Transform {
                 ...fieldConfig.extensions,
                 description,
             },
+        };
+    }
+
+    setType(
+        fieldConfig: GraphQLFieldConfig<any, any> | GraphQLInputFieldConfig,
+        type: any,
+    ): GraphQLFieldConfig<any, any> | GraphQLInputFieldConfig {
+        return {
+            ...fieldConfig,
+            type,
         };
     }
 

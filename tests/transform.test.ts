@@ -6,6 +6,7 @@ import {
     buildSchema,
     GraphQLEnumType,
     GraphQLNonNull,
+    GraphQLScalarType,
     type BooleanValueNode,
     type FloatValueNode,
     type GraphQLArgument,
@@ -292,6 +293,44 @@ describe('ReplaceConfigTransform', () => {
         expect(
             (fields.second.astNode.directives[0].arguments[5].value as StringValueNode).value,
         ).toBe(JSON.stringify([1, 2]));
+    });
+
+    it('Should apply type positive transformations to the schema', () => {
+        const transform = new ReplaceConfigTransform({
+            config: [
+                {
+                    typeName: 'TestResult',
+                    fieldName: 'second',
+                    type: 'String',
+                },
+            ] as ReplaceConfigTransformConfig[],
+        });
+
+        const transformedSchema = transform.transformSchema(originalSchema, {} as SubschemaConfig);
+
+        const fields = (transformedSchema.getType('TestResult') as GraphQLObjectType).getFields();
+
+        expect(fields.second.type).toBeInstanceOf(GraphQLScalarType);
+        expect((fields.second.type as GraphQLScalarType).name).toBe('String');
+    });
+
+    it('Should apply type negative transformations to the schema', () => {
+        const transform = new ReplaceConfigTransform({
+            config: [
+                {
+                    typeName: 'TestEnum',
+                    fieldName: 'FIRST',
+                    type: 'String',
+                },
+            ] as ReplaceConfigTransformConfig[],
+        });
+
+        const wrapped = () => {
+            transform.transformSchema(originalSchema, {} as SubschemaConfig);
+        };
+
+        expect(wrapped).toThrow(TypeError);
+        expect(wrapped).toThrow('Change type can only be set for InputField and Field.');
     });
 });
 

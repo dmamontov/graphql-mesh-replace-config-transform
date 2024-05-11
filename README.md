@@ -44,6 +44,7 @@ transforms:
       - typeName: PersonalDataInput
         fieldName: phone
         description: 'Filter by phone'
+        type: String
         deprecated: true
         nullable: false
         defaultValue: 79998887766
@@ -62,6 +63,7 @@ transforms:
 This transform allows you to change the following parameters in various parts of your GraphQL schema:
 
 - **description**: Available for Input, Composite, Enums.
+- **type**: Available for Input, Composite. (Use at your own risk. Replacing the type will not affect the result.)
 - **deprecated**: Available for Input, Composite, Enums.
 - **nullable**: Available for Input, Composite.
 - **defaultValue**: Available only for Input.

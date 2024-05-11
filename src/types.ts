@@ -2,6 +2,7 @@ export interface ReplaceConfigTransformConfig {
     typeName: string;
     fieldName: string;
     description?: string | boolean;
+    type?: any;
     deprecated?: string | boolean;
     nullable?: boolean;
     defaultValue?: string;
