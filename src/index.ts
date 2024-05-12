@@ -1,5 +1,6 @@
 import {
     GraphQLNonNull,
+    isNonNullType,
     Kind,
     type ConstDirectiveNode,
     type ConstValueNode,
@@ -193,9 +194,11 @@ export default class ReplaceConfigTransform implements Transform {
         fieldConfig: GraphQLFieldConfig<any, any> | GraphQLInputFieldConfig,
         type: any,
     ): GraphQLFieldConfig<any, any> | GraphQLInputFieldConfig {
+        const isNotNull = isNonNullType(fieldConfig.type);
+
         return {
             ...fieldConfig,
-            type,
+            type: isNotNull ? new GraphQLNonNull(type) : type,
         };
     }
 
@@ -221,12 +224,12 @@ export default class ReplaceConfigTransform implements Transform {
         nullable: boolean,
     ): GraphQLFieldConfig<any, any> | GraphQLInputFieldConfig {
         let newFieldConfig = fieldConfig;
-        if (nullable && newFieldConfig.type instanceof GraphQLNonNull) {
+        if (nullable && isNonNullType(newFieldConfig.type)) {
             newFieldConfig = {
                 ...newFieldConfig,
                 type: newFieldConfig.type.ofType,
             } as any;
-        } else if (!nullable && !(newFieldConfig.type instanceof GraphQLNonNull)) {
+        } else if (!nullable && !isNonNullType(newFieldConfig.type)) {
             newFieldConfig = {
                 ...newFieldConfig,
                 type: new GraphQLNonNull(newFieldConfig.type),
