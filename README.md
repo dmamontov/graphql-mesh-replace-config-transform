@@ -42,18 +42,18 @@ You need to include the Replace Config Transform in your GraphQL Mesh configurat
 transforms:
   - replaceConfig:
       - typeName: PersonalDataInput
-        fieldName: phone
-        description: 'Filter by phone'
-        type: String
-        deprecated: true
-        nullable: false
-        defaultValue: 79998887766
-        extensions:
-          custom: true
-        directives:
-          - name: constraint
-            args:
-              pattern: "^7\\d{10}$"
+        fields: [ phone ]
+        replacers:
+            - description: 'Filter by phone'
+            - type: String
+            - deprecated: true
+            - nullable: false
+            - default: 79998887766
+            - extensions:
+                custom: true
+            - directive: constraint
+              args:
+                pattern: "^7\\d{10}$"
 ```
 
 ! This transform does not add directive and extension logic.
@@ -66,9 +66,9 @@ This transform allows you to change the following parameters in various parts of
 - **type**: Available for Input, Composite. (Use at your own risk. Replacing the type will not affect the result.)
 - **deprecated**: Available for Input, Composite, Enums.
 - **nullable**: Available for Input, Composite.
-- **defaultValue**: Available only for Input.
+- **default**: Available only for Input.
 - **extensions**: Available for Input, Composite, Enums.
-- **directives**: Available for Input, Composite, Enums.
+- **directive**: Available for Input, Composite, Enums.
 
 ## Conclusion
 
