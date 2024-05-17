@@ -47,12 +47,6 @@ export class DirectiveReplacer extends BaseReplacer {
             };
         }
 
-        if (!value || value === 'null') {
-            return {
-                kind: Kind.NULL,
-            };
-        }
-
         if (!isNaN(Number(value))) {
             if (value % 1 === 0) {
                 return {
@@ -66,6 +60,12 @@ export class DirectiveReplacer extends BaseReplacer {
                     value: value.toString(),
                 };
             }
+        }
+
+        if (!value || value === 'null') {
+            return {
+                kind: Kind.NULL,
+            };
         }
 
         if (typeof value == 'object' || Array.isArray(value)) {
