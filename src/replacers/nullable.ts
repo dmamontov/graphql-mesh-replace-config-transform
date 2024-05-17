@@ -11,7 +11,7 @@ export class NullableReplacer extends BaseReplacer {
     modifySchema(fieldConfig: ReplaceFieldConfig, type: FieldType): ReplaceFieldConfig {
         const nullable = (this.options as ReplaceConfigReplacerNullableTransformConfig).nullable;
 
-        if (![FieldType.Composite, FieldType.Input].includes(type)) {
+        if (![FieldType.Composite, FieldType.Input, FieldType.Argument].includes(type)) {
             throw new TypeError('Nullable can only be set for InputField and Field.');
         }
 

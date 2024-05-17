@@ -3,11 +3,12 @@ import {
     type GraphQLFieldConfig,
     type GraphQLInputFieldConfig,
 } from 'graphql';
+import { type GraphQLArgumentConfig } from 'graphql/type/definition';
 import { type BaseReplacer } from './replacers/base';
 
 export interface ReplaceConfigTransformConfig {
     typeName: string;
-    fields: string[];
+    fields?: string[];
     replacers: ReplaceConfigReplacersTransformConfig[];
 }
 
@@ -54,9 +55,11 @@ export enum FieldType {
     Composite,
     Input,
     Enum,
+    Argument,
 }
 
 export type ReplaceFieldConfig =
     | GraphQLFieldConfig<any, any>
     | GraphQLInputFieldConfig
-    | GraphQLEnumValueConfig;
+    | GraphQLEnumValueConfig
+    | GraphQLArgumentConfig;

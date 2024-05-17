@@ -1,11 +1,14 @@
 import {
+    isNonNullType,
     type GraphQLEnumValueConfig,
     type GraphQLFieldConfig,
     type GraphQLInputFieldConfig,
     type GraphQLSchema,
 } from 'graphql';
+import { type GraphQLArgumentConfig } from 'graphql/index';
 import { applySchemaTransforms } from '@graphql-mesh/utils';
 import { type SubschemaConfig, type Transform } from '@graphql-tools/delegate';
+import { MapperKind, mapSchema } from '@graphql-tools/utils';
 import {
     TransformCompositeFields,
     TransformEnumValues,
@@ -145,6 +148,21 @@ export default class ReplaceConfigTransform implements Transform {
             }
         }
 
+        newSchema = mapSchema(newSchema, {
+            [MapperKind.ARGUMENT]: (
+                argumentConfig: GraphQLArgumentConfig,
+                fieldName: string,
+                typeName: string,
+            ) => {
+                return this.modifySchema(
+                    typeName,
+                    `${fieldName}.${argumentConfig.astNode.name.value}`,
+                    argumentConfig,
+                    FieldType.Argument,
+                ) as GraphQLArgumentConfig;
+            },
+        });
+
         return applySchemaTransforms(
             newSchema,
             subschemaConfig,
@@ -159,7 +177,15 @@ export default class ReplaceConfigTransform implements Transform {
         fieldConfig: ReplaceFieldConfig,
         fieldType: FieldType,
     ): any {
-        const config = this.getConfig(typeName, fieldName);
+        let config = this.getConfig(typeName, fieldName);
+        if (!config && (fieldConfig as any).type) {
+            config = this.getTypeConfig(
+                isNonNullType((fieldConfig as any).type)
+                    ? (fieldConfig as any).type.ofType.name
+                    : (fieldConfig as any).type.name,
+            );
+        }
+
         if (!config) {
             return fieldConfig;
         }
@@ -182,6 +208,12 @@ export default class ReplaceConfigTransform implements Transform {
     ): ReplaceConfigTransformConfig | undefined {
         return this.configs?.find(
             config => config.typeName === typeName && config.fields.includes(fieldName),
+        );
+    }
+
+    private getTypeConfig(typeName: string): ReplaceConfigTransformConfig | undefined {
+        return this.configs?.find(
+            config => config.typeName === typeName && config.fields === undefined,
         );
     }
 }

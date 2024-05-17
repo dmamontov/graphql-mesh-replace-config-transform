@@ -171,13 +171,15 @@ export class TypeReplacer extends BaseReplacer {
             throw new TypeError('Type not found');
         }
 
-        if (![FieldType.Composite, FieldType.Input].includes(type)) {
-            throw new TypeError('Change type can only be set for InputField and Field.');
+        if (![FieldType.Composite, FieldType.Input, FieldType.Argument].includes(type)) {
+            return fieldConfig;
         }
 
         return {
             ...fieldConfig,
-            type: isNonNullType((fieldConfig as any).type) ? new GraphQLNonNull(this.asType) : type,
+            type: isNonNullType((fieldConfig as any).type)
+                ? new GraphQLNonNull(this.asType)
+                : this.asType,
         } as ReplaceFieldConfig;
     }
 }

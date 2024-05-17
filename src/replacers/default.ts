@@ -10,8 +10,8 @@ export class DefaultReplacer extends BaseReplacer {
     modifySchema(fieldConfig: ReplaceFieldConfig, type: FieldType): ReplaceFieldConfig {
         const defaultValue = (this.options as ReplaceConfigReplacerDefaultTransformConfig).default;
 
-        if (type !== FieldType.Input) {
-            throw new TypeError('The default value can only be set for InputField.');
+        if (![FieldType.Input, FieldType.Argument].includes(type)) {
+            return fieldConfig;
         }
 
         return {
