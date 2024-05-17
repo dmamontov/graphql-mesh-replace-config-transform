@@ -1,4 +1,14 @@
-import { GraphQLNonNull, isNonNullType, type GraphQLScalarType, type GraphQLSchema } from 'graphql';
+import {
+    GraphQLBoolean,
+    GraphQLFloat,
+    GraphQLID,
+    GraphQLInt,
+    GraphQLNonNull,
+    GraphQLString,
+    isNonNullType,
+    type GraphQLScalarType,
+    type GraphQLSchema,
+} from 'graphql';
 import {
     GraphQLAccountNumber,
     GraphQLBigInt,
@@ -79,6 +89,11 @@ import { BaseReplacer } from './base';
 
 export class TypeReplacer extends BaseReplacer {
     protected scalars: GraphQLScalarType[] = [
+        GraphQLInt,
+        GraphQLFloat,
+        GraphQLString,
+        GraphQLBoolean,
+        GraphQLID,
         GraphQLDate,
         GraphQLTime,
         GraphQLDateTime,
