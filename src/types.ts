@@ -8,7 +8,7 @@ import { type BaseReplacer } from './replacers/base';
 
 export interface ReplaceConfigTransformConfig {
     typeName: string;
-    fields?: string[];
+    fields?: string[] | string;
     replacers: ReplaceConfigReplacersTransformConfig[];
 }
 

@@ -177,26 +177,30 @@ export default class ReplaceConfigTransform implements Transform {
         fieldConfig: ReplaceFieldConfig,
         fieldType: FieldType,
     ): any {
-        let config = this.getConfig(typeName, fieldName);
-        if (!config && (fieldConfig as any).type) {
-            config = this.getTypeConfig(
+        let configs = this.getConfig(typeName, fieldName, fieldType);
+
+        if ((fieldConfig as any).type) {
+            const typeConfig = this.getTypeConfig(
                 isNonNullType((fieldConfig as any).type)
                     ? (fieldConfig as any).type.ofType.name
                     : (fieldConfig as any).type.name,
             );
-        }
-
-        if (!config) {
-            return fieldConfig;
+            configs = [...configs, ...typeConfig];
         }
 
         let newFieldConfig = fieldConfig;
-        for (const modifier of config.replacers) {
-            if (!(modifier instanceof BaseReplacer)) {
+        for (const config of configs) {
+            if (!config) {
                 continue;
             }
 
-            newFieldConfig = modifier.modifySchema(newFieldConfig, fieldType);
+            for (const replacer of config.replacers) {
+                if (!(replacer instanceof BaseReplacer)) {
+                    continue;
+                }
+
+                newFieldConfig = replacer.modifySchema(newFieldConfig, fieldType);
+            }
         }
 
         return newFieldConfig;
@@ -205,14 +209,26 @@ export default class ReplaceConfigTransform implements Transform {
     private getConfig(
         typeName: string,
         fieldName: string,
-    ): ReplaceConfigTransformConfig | undefined {
-        return this.configs?.find(
-            config => config.typeName === typeName && config.fields.includes(fieldName),
-        );
+        fieldType: FieldType,
+    ): ReplaceConfigTransformConfig[] {
+        return this.configs?.filter(config => {
+            const fields = typeof config.fields === 'string' ? [config.fields] : config.fields;
+            const isType = config.typeName === typeName || config.typeName === '*';
+
+            if (fieldType === FieldType.Argument) {
+                const [_parentFieldName, argument] = fieldName.split('.');
+
+                if (isType && fields.includes(`*.${argument}`)) {
+                    return true;
+                }
+            }
+
+            return isType && (fields.includes(fieldName) || fields.includes('*'));
+        });
     }
 
-    private getTypeConfig(typeName: string): ReplaceConfigTransformConfig | undefined {
-        return this.configs?.find(
+    private getTypeConfig(typeName: string): ReplaceConfigTransformConfig[] {
+        return this.configs?.filter(
             config => config.typeName === typeName && config.fields === undefined,
         );
     }
