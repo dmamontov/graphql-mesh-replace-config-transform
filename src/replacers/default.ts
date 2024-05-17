@@ -1,3 +1,4 @@
+import { stringInterpolator } from '@graphql-mesh/string-interpolation';
 import {
     FieldType,
     type ReplaceConfigReplacerDefaultTransformConfig,
@@ -8,7 +9,10 @@ import { BaseReplacer } from './base';
 
 export class DefaultReplacer extends BaseReplacer {
     modifySchema(fieldConfig: ReplaceFieldConfig, type: FieldType): ReplaceFieldConfig {
-        const defaultValue = (this.options as ReplaceConfigReplacerDefaultTransformConfig).default;
+        let defaultValue = (this.options as ReplaceConfigReplacerDefaultTransformConfig).default;
+        if (typeof defaultValue === 'string') {
+            defaultValue = stringInterpolator.parse(defaultValue, { env: process.env });
+        }
 
         if (![FieldType.Input, FieldType.Argument].includes(type)) {
             return fieldConfig;

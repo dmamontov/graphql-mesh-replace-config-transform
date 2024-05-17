@@ -1,3 +1,4 @@
+import { stringInterpolator } from '@graphql-mesh/string-interpolation';
 import {
     type FieldType,
     type ReplaceConfigReplacerDeprecatedTransformConfig,
@@ -8,8 +9,12 @@ import { BaseReplacer } from './base';
 
 export class DeprecatedReplacer extends BaseReplacer {
     modifySchema(fieldConfig: ReplaceFieldConfig, _type: FieldType): ReplaceFieldConfig {
-        const deprecated = (this.options as ReplaceConfigReplacerDeprecatedTransformConfig)
+        let deprecated = (this.options as ReplaceConfigReplacerDeprecatedTransformConfig)
             .deprecated;
+
+        if (typeof deprecated === 'string') {
+            deprecated = stringInterpolator.parse(deprecated, { env: process.env });
+        }
 
         return {
             ...fieldConfig,
